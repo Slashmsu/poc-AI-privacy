@@ -1,0 +1,66 @@
+version: '3.8'
+
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: always
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - PRESIDIO_ANALYZER_URL=http://presidio-analyzer:3000
+      - PRESIDIO_ANONYMIZER_URL=http://presidio-anonymizer:3000
+    depends_on:
+      - presidio-analyzer
+      - presidio-anonymizer
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/chat"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  presidio-analyzer:
+    image: mcr.microsoft.com/presidio-analyzer
+    platform: linux/amd64 # Required for ARM-based machines
+    ports:
+      - "5001:3000"
+    environment:
+      - GRPC_PORT=5001
+      - ENABLE_GRPC=false
+      - FLASK_RUN_HOST=0.0.0.0
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  presidio-anonymizer:
+    image: mcr.microsoft.com/presidio-anonymizer
+    platform: linux/amd64
+    ports:
+      - "5002:3000"
+    depends_on:
+      - presidio-analyzer
+    environment:
+      - FLASK_RUN_HOST=0.0.0.0
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  presidio-image-redactor:
+    image: mcr.microsoft.com/presidio-image-redactor
+    platform: linux/amd64
+    ports:
+      - "5003:3000"
+    depends_on:
+      - presidio-analyzer
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
