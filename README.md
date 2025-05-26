@@ -5,6 +5,8 @@
 
 A privacy-focused AI chat API built with NestJS that ensures sensitive data protection through automatic detection and anonymization. This application showcases modern backend architecture, secure data handling practices, and integration with OpenAI's powerful language models.
 
+![Application Screenshot](assets/image.png)
+
 ## Key Features
 
 - **Privacy-First Architecture**: Automatically detects and anonymizes sensitive data like names, phone numbers, and locations before sending to AI services
